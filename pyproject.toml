@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vehicle-dispatch-api"
+version = "1.0.0"
+description = "Flask API for processing vehicle dispatch logs"
+dependencies = [
+    "Flask==3.0.0",
+    "flask-cors==4.0.0", 
+    "pandas==2.0.3",
+    "numpy==1.24.3",
+    "openpyxl==3.1.2",
+    "xlrd==2.0.1",
+    "Werkzeug==3.0.1",
+    "gunicorn==21.2.0"
+] 
