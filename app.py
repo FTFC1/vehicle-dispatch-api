@@ -330,6 +330,8 @@ def process_file():
                 'unique_models': len(valid_unique_models),
                 'total_vins_processed': total_vins_processed
             }
+            print(f"Calculated total_vins_processed: {total_vins_processed}")
+            print(f"Calculated unique_models: {len(valid_unique_models)}")
 
             # Return JSON response with filename and summary data
             return jsonify({

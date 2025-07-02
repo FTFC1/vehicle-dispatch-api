@@ -851,7 +851,7 @@
                 </div>
                 
                 <div class="actions">
-                    <button class="btn btn-primary" onclick="downloadReport()">Download Report</button>
+                    <button class="btn btn-primary" id="downloadReportBtn" onclick="downloadReport()">Download Report</button>
                     <button class="btn btn-secondary" onclick="generateNewReport()">Process Another File</button>
                 </div>
             </section>
@@ -894,8 +894,9 @@
                         document.querySelector('.stats-grid .stat-card:nth-child(4) .stat-number').textContent = data.summary_stats.total_vins_processed;
 
                         // Store filename for download
-                        document.querySelector('.btn-primary').dataset.filename = data.filename;
-                        document.querySelector('.btn-primary').dataset.tempdir = data.temp_dir;
+                        const downloadBtn = document.getElementById('downloadReportBtn');
+                        downloadBtn.dataset.filename = data.filename;
+                        downloadBtn.dataset.tempdir = data.temp_dir;
 
                         // Dynamically populate brand breakdown with progressive disclosure
                         const brandSection = document.querySelector('section.section:nth-of-type(2)'); // Assuming this is the brand breakdown section
