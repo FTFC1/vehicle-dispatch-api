@@ -405,13 +405,16 @@ def process_engine_vin_cell(raw_value):
     Returns a list of (engine, vin) tuples.
     """
     if pd.isna(raw_value) or not isinstance(raw_value, str):
+        print(f"DEBUG: process_engine_vin_cell - Raw value is NaN or not string: {raw_value}")
         return [("", "")]
     
+    print(f"DEBUG: process_engine_vin_cell - Processing raw_value: '{raw_value}'")
     # Split by comma if multiple pairs exist in the cell
     engine_vin_pairs = [pair.strip() for pair in raw_value.split(',') if pair.strip()]
     results = []
     
     for pair in engine_vin_pairs:
+        print(f"DEBUG: process_engine_vin_cell - Processing pair: '{pair}'")
         # Default empty values
         engine = ""
         vin = ""
@@ -528,6 +531,7 @@ def process_engine_vin_cell(raw_value):
                 vin = new_vin
         
         results.append((engine, vin))
+        print(f"DEBUG: process_engine_vin_cell - Appending (Engine: '{engine}', VIN: '{vin}')")
     
     return results
 
@@ -539,6 +543,10 @@ def process_brands(df, engine_vin_col, brand_col, target_brands):
         brand_query = '|'.join(search_terms)
         df_filtered = df[df[brand_col].str.lower().str.contains(brand_query, na=False, regex=True)]
         
+        print(f"DEBUG: process_brands - Processing brand: {brand_name}")
+        print(f"DEBUG: process_brands - Using engine_vin_col: {engine_vin_col}, brand_col: {brand_col}")
+        print(f"DEBUG: process_brands - Filtered DataFrame has {len(df_filtered)} rows for {brand_name}")
+
         # Process the data: split the engine-VIN values into separate rows
         print(f"Processing {brand_name}...")
         
@@ -583,6 +591,7 @@ def process_brands(df, engine_vin_col, brand_col, target_brands):
         processed_data_by_brand[brand_name] = processed_df
         print(f"  Found {len(brand_df)} rows matching '{brand_query.lower()}'")
         print(f"  Created {len(processed_df)} rows after splitting")
+        print(f"DEBUG: process_brands - Columns in processed_df for {brand_name}: {processed_df.columns.tolist()}")
     
     return processed_data_by_brand
 
