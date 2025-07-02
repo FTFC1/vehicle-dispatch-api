@@ -9,6 +9,7 @@ from flask_cors import CORS
 import pandas as pd
 import os
 import tempfile
+import re
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from io import BytesIO
@@ -44,6 +45,31 @@ TARGET_BRANDS = {
     "FOTON": ["foton"],
     "DINGZHOU": ["dingzhou"],
 }
+
+def clean_for_excel(text):
+    """Clean text to be Excel-safe by removing illegal characters"""
+    if pd.isna(text) or text is None:
+        return ""
+    
+    text = str(text).strip()
+    
+    # Remove illegal Excel characters (control characters)
+    # These characters cause "cannot be used in worksheets" errors
+    text = re.sub(r'[\x00-\x1f\x7f-\x9f]', '', text)
+    
+    # Limit length for Excel cells (32,767 character limit)
+    if len(text) > 32000:
+        text = text[:32000] + "..."
+    
+    return text
+
+def clean_dataframe_for_excel(df):
+    """Clean entire dataframe for Excel export"""
+    df_clean = df.copy()
+    for col in df_clean.columns:
+        if df_clean[col].dtype == 'object':  # String columns
+            df_clean[col] = df_clean[col].apply(clean_for_excel)
+    return df_clean
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -215,12 +241,16 @@ def process_file():
                     })
                 
                 summary_df = pd.DataFrame(summary_data)
-                summary_df.to_excel(writer, sheet_name='Summary', index=False)
+                # Clean summary data before writing
+                summary_df_clean = clean_dataframe_for_excel(summary_df)
+                summary_df_clean.to_excel(writer, sheet_name='Summary', index=False)
                 
                 # Individual brand sheets
                 for brand, brand_df in processed_data.items():
                     if len(brand_df) > 0:  # Only create sheet if data exists
-                        brand_df.to_excel(writer, sheet_name=brand[:31], index=False)  # Excel sheet name limit
+                        # Clean brand data before writing to Excel
+                        brand_df_clean = clean_dataframe_for_excel(brand_df)
+                        brand_df_clean.to_excel(writer, sheet_name=brand[:31], index=False)  # Excel sheet name limit
             
             output_buffer.seek(0)
             
