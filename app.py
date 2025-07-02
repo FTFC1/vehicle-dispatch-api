@@ -163,7 +163,35 @@ def process_file():
             df_raw = None
             
             if file.filename.lower().endswith('.csv'):
-                df = pd.read_csv(tmp_file.name)
+                # Robust CSV reading with automatic delimiter detection
+                try:
+                    # First, try to detect delimiter
+                    import csv
+                    with open(tmp_file.name, 'r', encoding='utf-8') as f:
+                        sample = f.read(1024)
+                        sniffer = csv.Sniffer()
+                        delimiter = sniffer.sniff(sample).delimiter
+                    
+                    # Read with detected delimiter
+                    df = pd.read_csv(tmp_file.name, delimiter=delimiter, encoding='utf-8')
+                except:
+                    # Fallback: try common delimiters
+                    for delimiter in [',', ';', '\t', '|']:
+                        try:
+                            df = pd.read_csv(tmp_file.name, delimiter=delimiter, encoding='utf-8')
+                            if len(df.columns) > 1:  # If we got multiple columns, probably correct
+                                break
+                        except:
+                            continue
+                    
+                    # Last resort: try with different encodings
+                    if df is None:
+                        for encoding in ['latin1', 'cp1252', 'iso-8859-1']:
+                            try:
+                                df = pd.read_csv(tmp_file.name, encoding=encoding)
+                                break
+                            except:
+                                continue
             else:
                 # Try different approaches for Excel files
                 try:
