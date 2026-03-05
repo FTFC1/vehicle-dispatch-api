@@ -12,6 +12,16 @@ import shutil
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from io import BytesIO
+from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
+import openpyxl.cell.cell as _cell
+
+# Monkey-patch: strip illegal chars instead of raising
+_orig_check = _cell.Cell.check_string
+def _safe_check(self, value):
+    if isinstance(value, str):
+        value = ILLEGAL_CHARACTERS_RE.sub('', value)
+    return value
+_cell.Cell.check_string = _safe_check
 
 # Import existing processor functions
 from simpler_processor import (
