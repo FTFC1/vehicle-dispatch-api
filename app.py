@@ -16,12 +16,24 @@ from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
 import openpyxl.cell.cell as _cell
 
 # Monkey-patch: strip illegal chars instead of raising
-_orig_check = _cell.Cell.check_string
-def _safe_check(self, value):
+# Must be staticmethod to match openpyxl's original signature
+def _safe_check(value):
     if isinstance(value, str):
         value = ILLEGAL_CHARACTERS_RE.sub('', value)
     return value
-_cell.Cell.check_string = _safe_check
+_cell.Cell.check_string = staticmethod(_safe_check)
+
+def clean_df_for_excel(df):
+    """Strip illegal Excel characters from all string columns before writing."""
+    df_clean = df.copy()
+    for col in df_clean.columns:
+        if df_clean[col].dtype == 'object':
+            df_clean[col] = df_clean[col].apply(
+                lambda x: ILLEGAL_CHARACTERS_RE.sub('', str(x)) if pd.notna(x) and isinstance(x, str) else x
+            )
+    # Also clean column names
+    df_clean.columns = [ILLEGAL_CHARACTERS_RE.sub('', str(c)) for c in df_clean.columns]
+    return df_clean
 
 # Import existing processor functions
 from simpler_processor import (
@@ -281,7 +293,7 @@ def process_file():
                     })
                 
                 summary_df = pd.DataFrame(summary_data)
-                summary_df.to_excel(writer, sheet_name='Summary', index=False)
+                clean_df_for_excel(summary_df).to_excel(writer, sheet_name='Summary', index=False)
                 
                 # Prepare brand breakdown data for frontend
                 brand_breakdown = []
@@ -320,7 +332,7 @@ def process_file():
                 # Individual brand sheets
                 for brand, brand_df in processed_data.items():
                     if len(brand_df) > 0:  # Only create sheet if data exists
-                        brand_df.to_excel(writer, sheet_name=brand[:31], index=False)  # Excel sheet name limit
+                        clean_df_for_excel(brand_df).to_excel(writer, sheet_name=brand[:31], index=False)  # Excel sheet name limit
             
             output_buffer.seek(0)
             
@@ -415,6 +427,7 @@ def cleanup_temp_dir():
 def health_check():
     return jsonify({
         'status': 'healthy',
+        'version': '2.1-charfix',
         'timestamp': datetime.now().isoformat(),
         'supported_brands': list(TARGET_BRANDS.keys())
     })
