@@ -13,6 +13,7 @@ import re
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from io import BytesIO
+from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
 
 # Import existing processor functions
 from simpler_processor import (
@@ -53,9 +54,14 @@ def clean_for_excel(text):
     
     text = str(text).strip()
     
-    # Remove illegal Excel characters (control characters)
+    # Remove illegal Excel characters (control characters + illegal XML chars)
     # These characters cause "cannot be used in worksheets" errors
-    text = re.sub(r'[\x00-\x1f\x7f-\x9f]', '', text)
+    # Covers: C0 controls, DEL, C1 controls, and Unicode chars illegal in XML 1.0
+    text = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f\ufffe\uffff]', '', text)
+    # Also remove surrogate pairs and other non-BMP problem chars
+    text = re.sub(r'[\ud800-\udfff]', '', text)
+    # Final pass: use openpyxl's own illegal character regex
+    text = ILLEGAL_CHARACTERS_RE.sub('', text)
     
     # Limit length for Excel cells (32,767 character limit)
     if len(text) > 32000:
