@@ -439,7 +439,7 @@ def cleanup_temp_dir():
 def health_check():
     return jsonify({
         'status': 'healthy',
-        'version': '2.1-charfix',
+        'version': '2.2-timeout-fix',
         'timestamp': datetime.now().isoformat(),
         'supported_brands': list(TARGET_BRANDS.keys())
     })
