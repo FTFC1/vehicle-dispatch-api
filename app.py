@@ -255,7 +255,19 @@ def process_file():
             
             if df is None or len(df) == 0:
                 return jsonify({'error': 'No data found in file'}), 400
-            
+
+            # Clean all string data immediately after reading
+            # This prevents illegal characters from reaching openpyxl later
+            import re
+            _illegal_re = re.compile(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f]')
+            for col in df.columns:
+                if df[col].dtype == 'object':
+                    df[col] = df[col].apply(
+                        lambda x: _illegal_re.sub('', str(x)).strip() if pd.notna(x) and isinstance(x, str) else x
+                    )
+            # Clean column names too
+            df.columns = [_illegal_re.sub('', str(c)) for c in df.columns]
+
             # Auto-detect the correct columns
             engine_vin_col, brand_col = auto_detect_columns(df, df_raw)
             
