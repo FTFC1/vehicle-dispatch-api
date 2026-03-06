@@ -268,6 +268,17 @@ def process_file():
             # Clean column names too
             df.columns = [_illegal_re.sub('', str(c)) for c in df.columns]
 
+            # Drop unused columns early to speed up processing
+            # Keep only columns needed for brand detection, engine-VIN processing, and output
+            keep_columns = [
+                'Customer Name', 'Item Code', 'Item Description',
+                'Engine-Alternator No.', 'Delivery No', 'Delivery Date',
+                'Invoice No', 'Invoice Date', 'VIN', 'Engine'
+            ]
+            existing_keep = [c for c in keep_columns if c in df.columns]
+            if len(existing_keep) >= 3:
+                df = df[existing_keep].copy()
+
             # Auto-detect the correct columns
             engine_vin_col, brand_col = auto_detect_columns(df, df_raw)
             
@@ -439,7 +450,7 @@ def cleanup_temp_dir():
 def health_check():
     return jsonify({
         'status': 'healthy',
-        'version': '2.2-timeout-fix',
+        'version': '2.3-perf',
         'timestamp': datetime.now().isoformat(),
         'supported_brands': list(TARGET_BRANDS.keys())
     })
