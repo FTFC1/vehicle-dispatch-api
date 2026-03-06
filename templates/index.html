@@ -859,6 +859,8 @@
     </div>
 
     <script>
+        // Auto-detect base path from where the page is served
+        const API_BASE = window.location.pathname.replace(/\/+$/, '');
         let currentTempDir = null; // To store the temporary directory for cleanup
 
         // File upload handling
@@ -876,7 +878,7 @@
                 displayError('');
 
                 try {
-                    const response = await fetch('/api/process', {
+                    const response = await fetch(`${API_BASE}/api/process`, {
                         method: 'POST',
                         body: formData
                     });
@@ -1095,7 +1097,7 @@
             const filename = event.target.dataset.filename;
             const tempDir = event.target.dataset.tempdir;
             if (filename && tempDir) {
-                window.location.href = `/api/download/${filename}?temp_dir=${tempDir}`;
+                window.location.href = `${API_BASE}/api/download/${filename}?temp_dir=${tempDir}`;
             } else {
                 alert('No report available for download.');
             }
@@ -1105,7 +1107,7 @@
         async function generateNewReport() {
             if (currentTempDir) {
                 try {
-                    await fetch('/api/cleanup', {
+                    await fetch(`${API_BASE}/api/cleanup`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
