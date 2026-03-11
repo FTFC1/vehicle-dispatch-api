@@ -330,15 +330,152 @@
             background: rgba(255, 255, 255, 0.1);
         }
 
-        /* Loading State */
-        .loading {
+        /* File Status (IBM Carbon-style inline upload) */
+        .file-status {
             display: none;
-            text-align: center;
-            padding: 40px;
+            max-width: 600px;
+            margin: 24px auto 0;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 8px;
+            padding: 16px 20px;
+            text-align: left;
         }
 
-        .loading.active {
+        .file-status.active {
             display: block;
+        }
+
+        .file-status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .file-status-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .file-status-icon {
+            width: 32px;
+            height: 32px;
+            background: rgba(255, 69, 0, 0.15);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 14px;
+        }
+
+        .file-status-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-status-size {
+            font-size: 12px;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .file-status-close {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .file-status-close:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .file-status-progress {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .file-status-bar {
+            height: 100%;
+            border-radius: 2px;
+            background: #ff4500;
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        .file-status-bar.indeterminate {
+            width: 30%;
+            animation: indeterminate 1.8s ease-in-out infinite;
+        }
+
+        @keyframes indeterminate {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(430%); }
+        }
+
+        .file-status-phase {
+            font-size: 12px;
+            color: #999;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .file-status-phase .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #ff4500;
+            animation: pulse-dot 1.2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+        }
+
+        .file-status.complete .file-status-bar {
+            width: 100%;
+            background: #4ade80;
+            animation: none;
+        }
+
+        .file-status.complete .file-status-phase .dot {
+            background: #4ade80;
+            animation: none;
+            opacity: 1;
+        }
+
+        .file-status.error .file-status-bar {
+            background: #ef4444;
+            animation: none;
+        }
+
+        .file-status.error .file-status-phase .dot {
+            background: #ef4444;
+            animation: none;
+            opacity: 1;
+        }
+
+        .upload-area.hidden {
+            display: none;
         }
 
         .error-message {
@@ -348,26 +485,11 @@
             padding: 10px 20px;
             margin-top: 20px;
             border-radius: 8px;
-            display: none; /* Hidden by default */
+            display: none;
             max-width: 600px;
             margin-left: auto;
             margin-right: auto;
             font-size: 14px;
-        }
-
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 3px solid rgba(255, 69, 0, 0.3);
-            border-top: 3px solid #ff4500;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
         }
 
         /* Search and Preview */
@@ -651,9 +773,27 @@
                     <input type="file" id="fileInput" class="file-input" accept=".xlsx,.xls" onchange="handleFileUpload(this)">
                 </div>
 
-                <div class="loading" id="loadingState">
-                    <div class="spinner"></div>
-                    <div class="loading-message" style="color: #999;">Processing your dispatch data...</div>
+                <div class="file-status" id="fileStatus">
+                    <div class="file-status-header">
+                        <div class="file-status-info">
+                            <div class="file-status-icon">XLS</div>
+                            <div>
+                                <div class="file-status-name" id="fileStatusName">file.xlsx</div>
+                                <div class="file-status-size" id="fileStatusSize">2.1 MB</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="file-status-progress">
+                        <div class="file-status-bar" id="fileStatusBar"></div>
+                    </div>
+                    <div class="file-status-phase" id="fileStatusPhase">
+                        <span class="dot"></span>
+                        <span id="fileStatusText">Uploading...</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 6px;">
+                        <div id="fileStatusTime" style="font-size: 12px; color: #666;"></div>
+                        <div id="fileStatusPct" style="font-size: 12px; color: #999; font-weight: 500;"></div>
+                    </div>
                 </div>
                 <div id="errorMessage" class="error-message"></div>
             </section>
@@ -669,20 +809,20 @@
                 
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-number">243</div>
-                        <div class="stat-label">Total Vehicles</div>
+                        <div class="stat-number" id="statRows">—</div>
+                        <div class="stat-label">Input Rows</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-number">6</div>
+                        <div class="stat-number" id="statBrands">—</div>
                         <div class="stat-label">Brands</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-number">243</div>
+                        <div class="stat-number" id="statModels">—</div>
                         <div class="stat-label">Unique Models</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-number">0</div>
-                        <div class="stat-label">Total VINs Processed</div>
+                        <div class="stat-number" id="statVins">—</div>
+                        <div class="stat-label">Unique VINs</div>
                     </div>
                 </div>
             </section>
@@ -708,145 +848,18 @@
 
                 <!-- Preview Tabs -->
                 <div class="preview-tabs">
-                    <button class="tab-btn active" onclick="showTab('summary')">Summary</button>
-                    <button class="tab-btn" onclick="showTab('changan')">Changan (199)</button>
-                    <button class="tab-btn" onclick="showTab('maxus')">Maxus (25)</button>
-                    <button class="tab-btn" onclick="showTab('search')">Search Results</button>
+                    <button class="tab-btn active" onclick="showTab('summary')">All Brands</button>
+                    <button class="tab-btn" onclick="showTab('search')">Search</button>
                 </div>
 
                 <!-- Tab Content -->
                 <div class="tab-content active" id="summary-tab">
-                    <div class="data-table">
-                        <div class="table-header">
-                            <div>Brand</div>
-                            <div>Model</div>
-                            <div>VIN (Last 6)</div>
-                            <div>Customer</div>
-                            <div>Dispatch Status</div>
-                        </div>
-                        <div class="table-row">
-                            <div>Changan</div>
-                            <div>CS35 Plus</div>
-                            <div>...284751</div>
-                            <div>Lagos Auto Ltd</div>
-                            <div class="status-ready">Ready</div>
-                        </div>
-                        <div class="table-row">
-                            <div>Changan</div>
-                            <div>Uni-V</div>
-                            <div>...639472</div>
-                            <div>Ikeja Motors</div>
-                            <div class="status-dispatched">Dispatched</div>
-                        </div>
-                        <div class="table-row">
-                            <div>Maxus</div>
-                            <div>T90 Pickup</div>
-                            <div>...851639</div>
-                            <div>Fleet Solutions</div>
-                            <div class="status-ready">Ready</div>
-                        </div>
-                        <div class="table-row">
-                            <div>ZNA</div>
-                            <div>Rich 6</div>
-                            <div>...472851</div>
-                            <div>Victoria Island Auto</div>
-                            <div class="status-pending">Pending</div>
-                        </div>
-                        <div class="table-row">
-                            <div>GWM</div>
-                            <div>Haval H6</div>
-                            <div>...194728</div>
-                            <div>Premium Motors</div>
-                            <div class="status-ready">Ready</div>
-                        </div>
-                    </div>
-                    <div class="table-footer">
-                        Showing 5 of 243 vehicles
-                    </div>
-                </div>
-
-                <div class="tab-content" id="changan-tab">
-                    <div class="data-table">
-                        <div class="table-header">
-                            <div>Model</div>
-                            <div>VIN (Last 6)</div>
-                            <div>Customer</div>
-                            <div>Invoice #</div>
-                            <div>Status</div>
-                        </div>
-                        <div class="table-row">
-                            <div>CS35 Plus</div>
-                            <div>...284751</div>
-                            <div>Lagos Auto Ltd</div>
-                            <div>INV-2025-1847</div>
-                            <div class="status-ready">Ready</div>
-                        </div>
-                        <div class="table-row">
-                            <div>Uni-V</div>
-                            <div>...639472</div>
-                            <div>Ikeja Motors</div>
-                            <div>INV-2025-1848</div>
-                            <div class="status-dispatched">Dispatched</div>
-                        </div>
-                        <div class="table-row">
-                            <div>CS75 Plus</div>
-                            <div>...847263</div>
-                            <div>Abuja Central Motors</div>
-                            <div>INV-2025-1849</div>
-                            <div class="status-ready">Ready</div>
-                        </div>
-                        <div class="table-row">
-                            <div>UNI-K</div>
-                            <div>...592847</div>
-                            <div>Port Harcourt Auto</div>
-                            <div>INV-2025-1850</div>
-                            <div class="status-pending">Pending</div>
-                        </div>
-                    </div>
-                    <div class="table-footer">
-                        Showing 4 of 199 Changan vehicles
-                    </div>
-                </div>
-
-                <div class="tab-content" id="maxus-tab">
-                    <div class="data-table">
-                        <div class="table-header">
-                            <div>Model</div>
-                            <div>VIN (Last 6)</div>
-                            <div>Customer</div>
-                            <div>Invoice #</div>
-                            <div>Status</div>
-                        </div>
-                        <div class="table-row">
-                            <div>T90 Pickup</div>
-                            <div>...851639</div>
-                            <div>Fleet Solutions</div>
-                            <div>INV-2025-1923</div>
-                            <div class="status-ready">Ready</div>
-                        </div>
-                        <div class="table-row">
-                            <div>T70 Pickup</div>
-                            <div>...739482</div>
-                            <div>Commercial Vehicles Ltd</div>
-                            <div>INV-2025-1924</div>
-                            <div class="status-dispatched">Dispatched</div>
-                        </div>
-                        <div class="table-row">
-                            <div>G10 Van</div>
-                            <div>...629184</div>
-                            <div>Logistics Pro</div>
-                            <div>INV-2025-1925</div>
-                            <div class="status-ready">Ready</div>
-                        </div>
-                    </div>
-                    <div class="table-footer">
-                        Showing 3 of 25 Maxus vehicles
-                    </div>
+                    <div id="summaryTable"></div>
                 </div>
 
                 <div class="tab-content" id="search-tab">
                     <div class="search-results">
-                        <div class="search-info">Enter a search term above to find specific vehicles</div>
+                        <div class="search-info">Search brands by name (e.g. "changan", "hyundai")</div>
                     </div>
                 </div>
                 
@@ -862,15 +875,96 @@
         // Auto-detect base path from where the page is served
         const API_BASE = window.location.pathname.replace(/\/+$/, '');
         let currentTempDir = null; // To store the temporary directory for cleanup
+        let allBrandData = []; // Stores flat brand list for search
+
+        // Format file size for display
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / 1048576).toFixed(1) + ' MB';
+        }
+
+        // Processing phases with simulated timing
+        const PHASES = [
+            'Uploading file...',
+            'Reading Excel data...',
+            'Cleaning dispatch records...',
+            'Processing engine & VIN data...',
+            'Building brand breakdown...',
+            'Generating report...',
+        ];
+        let phaseTimer = null;
+        let elapsedTimer = null;
+        let startTime = null;
+        let estimatedSeconds = 0;
+
+        function estimateTime(fileBytes) {
+            // ~50s per MB based on 2.1MB → 106s observed
+            return Math.max(30, Math.round((fileBytes / 1048576) * 50));
+        }
+
+        function startPhaseUpdates(fileSizeBytes) {
+            let phaseIndex = 0;
+            startTime = Date.now();
+            estimatedSeconds = estimateTime(fileSizeBytes);
+            const statusText = document.getElementById('fileStatusText');
+            const statusBar = document.getElementById('fileStatusBar');
+            const timeEl = document.getElementById('fileStatusTime');
+            statusBar.classList.add('indeterminate');
+            statusText.textContent = PHASES[0];
+            timeEl.textContent = 'About ' + formatTime(estimatedSeconds) + ' remaining';
+
+            const phaseInterval = Math.round((estimatedSeconds * 1000) / PHASES.length);
+            phaseTimer = setInterval(() => {
+                phaseIndex++;
+                if (phaseIndex < PHASES.length) {
+                    statusText.textContent = PHASES[phaseIndex];
+                }
+            }, phaseInterval);
+
+            const pctEl = document.getElementById('fileStatusPct');
+            elapsedTimer = setInterval(() => {
+                const elapsed = Math.round((Date.now() - startTime) / 1000);
+                const remaining = Math.max(0, estimatedSeconds - elapsed);
+                const pct = Math.min(95, Math.round((elapsed / estimatedSeconds) * 100));
+                pctEl.textContent = pct + '%';
+                if (remaining > 0) {
+                    timeEl.textContent = 'About ' + formatTime(remaining) + ' remaining';
+                } else {
+                    timeEl.textContent = 'Almost done...';
+                    pctEl.textContent = '95%';
+                }
+            }, 1000);
+        }
+
+        function formatTime(secs) {
+            if (secs < 60) return secs + 's';
+            const m = Math.floor(secs / 60);
+            const s = secs % 60;
+            return m + 'm ' + (s > 0 ? s + 's' : '');
+        }
+
+        function stopPhaseUpdates() {
+            if (phaseTimer) { clearInterval(phaseTimer); phaseTimer = null; }
+            if (elapsedTimer) { clearInterval(elapsedTimer); elapsedTimer = null; }
+        }
 
         // File upload handling
         async function handleFileUpload(input) {
             if (input.files && input.files[0]) {
                 const file = input.files[0];
-                
-                // Show loading state
-                document.getElementById('loadingState').classList.add('active');
-                
+
+                // Show file status inline
+                const fileStatus = document.getElementById('fileStatus');
+                const uploadArea = document.querySelector('.upload-area');
+                document.getElementById('fileStatusName').textContent = file.name;
+                document.getElementById('fileStatusSize').textContent = formatFileSize(file.size);
+                document.getElementById('fileStatus').querySelector('.file-status-icon').textContent =
+                    file.name.endsWith('.xls') ? 'XLS' : 'XLSX';
+                fileStatus.className = 'file-status active';
+                uploadArea.classList.add('hidden');
+                startPhaseUpdates(file.size);
+
                 const formData = new FormData();
                 formData.append('file', file);
 
@@ -890,10 +984,35 @@
                         currentTempDir = data.temp_dir;
                         
                         // Populate results page with actual data
-                        document.querySelector('.stats-grid .stat-card:nth-child(1) .stat-number').textContent = data.summary_stats.total_vehicles;
-                        document.querySelector('.stats-grid .stat-card:nth-child(2) .stat-number').textContent = data.summary_stats.brands_count;
-                        document.querySelector('.stats-grid .stat-card:nth-child(3) .stat-number').textContent = data.summary_stats.unique_models;
-                        document.querySelector('.stats-grid .stat-card:nth-child(4) .stat-number').textContent = data.summary_stats.total_vins_processed;
+                        const s = data.summary_stats;
+                        document.getElementById('statRows').textContent = Number(s.total_rows_input || s.total_vehicles).toLocaleString();
+                        document.getElementById('statBrands').textContent = Number(s.brands_count).toLocaleString();
+                        document.getElementById('statModels').textContent = Number(s.unique_models).toLocaleString();
+                        document.getElementById('statVins').textContent = Number(s.total_vins_processed).toLocaleString();
+
+                        // Store brand data for search + summary table
+                        allBrandData = [];
+                        for (const category in data.brand_breakdown) {
+                            for (const b of data.brand_breakdown[category]) {
+                                allBrandData.push({ ...b, category });
+                            }
+                        }
+
+                        // Build summary table
+                        let summaryHTML = `<div class="data-table">
+                            <div class="table-header" style="grid-template-columns: 1.5fr 1fr 1fr 2fr;">
+                                <div>Brand</div><div>Count</div><div>Share</div><div>Category</div>
+                            </div>`;
+                        allBrandData.sort((a, b) => b.count - a.count).forEach(b => {
+                            summaryHTML += `<div class="table-row" style="grid-template-columns: 1.5fr 1fr 1fr 2fr;">
+                                <div style="font-weight: 600;">${b.name}</div>
+                                <div style="color: #ff4500; font-weight: 600;">${Number(b.count).toLocaleString()}</div>
+                                <div>${b.percentage}%</div>
+                                <div style="color: #999;">${b.category}</div>
+                            </div>`;
+                        });
+                        summaryHTML += '</div>';
+                        document.getElementById('summaryTable').innerHTML = summaryHTML;
 
                         // Store filename for download
                         const downloadBtn = document.getElementById('downloadReportBtn');
@@ -948,16 +1067,44 @@
                             }
                         }
 
-                        showResults();
+                        // Show completion state briefly
+                        stopPhaseUpdates();
+                        fileStatus.classList.add('complete');
+                        document.getElementById('fileStatusText').textContent = 'Done — ' + Number(data.summary_stats.total_vehicles).toLocaleString() + ' entries processed';
+                        document.getElementById('fileStatusBar').classList.remove('indeterminate');
+                        document.getElementById('fileStatusPct').textContent = '100%';
+
+                        setTimeout(() => {
+                            showResults();
+                            resetFileStatus();
+                        }, 1200);
                     } else {
+                        stopPhaseUpdates();
+                        fileStatus.classList.add('error');
+                        document.getElementById('fileStatusText').textContent = 'Processing failed';
+                        document.getElementById('fileStatusBar').classList.remove('indeterminate');
                         displayError('Error processing file: ' + data.error);
+                        setTimeout(resetFileStatus, 3000);
                     }
                 } catch (error) {
+                    stopPhaseUpdates();
+                    const fileStatus = document.getElementById('fileStatus');
+                    fileStatus.classList.add('error');
+                    document.getElementById('fileStatusText').textContent = 'Upload failed';
+                    document.getElementById('fileStatusBar').classList.remove('indeterminate');
                     displayError('Network error or server issue: ' + error.message);
-                } finally {
-                    document.getElementById('loadingState').classList.remove('active');
+                    setTimeout(resetFileStatus, 3000);
                 }
             }
+        }
+
+        // Reset file status back to hidden
+        function resetFileStatus() {
+            const fileStatus = document.getElementById('fileStatus');
+            fileStatus.className = 'file-status';
+            document.querySelector('.upload-area').classList.remove('hidden');
+            document.getElementById('fileStatusBar').classList.remove('indeterminate');
+            document.getElementById('fileInput').value = '';
         }
 
         // Helper function to display error messages
@@ -996,54 +1143,45 @@
             document.getElementById(tabName + '-tab').classList.add('active');
         }
 
-        // Search functionality
+        // Search functionality — searches brand breakdown data
         function searchData() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
             const searchResults = document.querySelector('.search-results');
-            
+
             if (!searchTerm) {
-                searchResults.innerHTML = '<div class="search-info">Enter a search term above to find specific vehicles</div>';
+                searchResults.innerHTML = '<div class="search-info">Search brands by name (e.g. "changan", "hyundai")</div>';
                 return;
             }
 
-            // Mock search results
-            const mockResults = [
-                { brand: 'Changan', model: 'CS35 Plus', vin: '...284751', customer: 'Lagos Auto Ltd', status: 'Ready' },
-                { brand: 'Maxus', model: 'T90 Pickup', vin: '...851639', customer: 'Fleet Solutions', status: 'Ready' },
-                { brand: 'ZNA', model: 'Rich 6', vin: '...472851', customer: 'Victoria Island Auto', status: 'Pending' }
-            ].filter(item => 
-                item.brand.toLowerCase().includes(searchTerm) ||
-                item.model.toLowerCase().includes(searchTerm) ||
-                item.vin.includes(searchTerm) ||
-                item.customer.toLowerCase().includes(searchTerm)
+            const matches = allBrandData.filter(b =>
+                b.name.toLowerCase().includes(searchTerm) ||
+                b.category.toLowerCase().includes(searchTerm)
             );
 
-            if (mockResults.length === 0) {
-                searchResults.innerHTML = '<div class="search-info">No results found for "' + searchTerm + '"</div>';
+            if (matches.length === 0) {
+                searchResults.innerHTML = '<div class="search-info">No brands matching "' + searchTerm + '"</div>';
             } else {
                 let tableHTML = `
                     <div class="data-table">
-                        <div class="table-header">
+                        <div class="table-header" style="grid-template-columns: 1.5fr 1fr 1fr 2fr;">
                             <div>Brand</div>
-                            <div>Model</div>
-                            <div>VIN (Last 6)</div>
-                            <div>Customer</div>
-                            <div>Status</div>
+                            <div>Count</div>
+                            <div>Share</div>
+                            <div>Category</div>
                         </div>
                 `;
-                
-                mockResults.forEach(result => {
+
+                matches.forEach(b => {
                     tableHTML += `
-                        <div class="table-row">
-                            <div>${result.brand}</div>
-                            <div>${result.model}</div>
-                            <div>${result.vin}</div>
-                            <div>${result.customer}</div>
-                            <div class="status-${result.status.toLowerCase()}">${result.status}</div>
+                        <div class="table-row" style="grid-template-columns: 1.5fr 1fr 1fr 2fr;">
+                            <div style="font-weight: 600;">${b.name}</div>
+                            <div style="color: #ff4500; font-weight: 600;">${Number(b.count).toLocaleString()}</div>
+                            <div>${b.percentage}%</div>
+                            <div style="color: #999;">${b.category}</div>
                         </div>
                     `;
                 });
-                
+
                 tableHTML += '</div>';
                 searchResults.innerHTML = tableHTML;
             }

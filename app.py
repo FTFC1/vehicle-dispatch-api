@@ -373,38 +373,24 @@ def process_file():
 
             # Prepare summary data for frontend
             total_vins_processed = 0
-            valid_unique_models = set()
+            unique_models = set()
+            total_rows_input = len(df)
             for brand, brand_df in processed_data.items():
                 if 'VIN' in brand_df.columns:
                     total_vins_processed += brand_df['VIN'].nunique()
-                
-                # Validate models against the loaded product list
                 if 'Item Description' in brand_df.columns:
-                    for item_desc in brand_df['Item Description'].dropna().unique():
-                        # Attempt to extract model from item description or use a direct model column if available
-                        # This is a simplified approach; a more robust parsing might be needed
-                        model_from_desc = item_desc.split(' ')[1].strip().upper() if len(item_desc.split(' ')) > 1 else ""
-                        
-                        # Check if the (BRAND, MODEL) pair is in our valid products list
-                        # Use the brand name from processed_data.items() as it's already standardized
-                        if (brand.upper(), model_from_desc) in VALID_PRODUCTS:
-                            valid_unique_models.add(model_from_desc)
-                        else:
-                            # Fallback: if model_from_desc is not found, try to match just the brand
-                            # This handles cases where the model name might be inconsistent
-                            for valid_brand, valid_model in VALID_PRODUCTS:
-                                if valid_brand == brand.upper() and model_from_desc in valid_model:
-                                    valid_unique_models.add(model_from_desc)
-                                    break
+                    for desc in brand_df['Item Description'].dropna().unique():
+                        unique_models.add(desc.strip())
 
             summary_stats = {
                 'total_vehicles': total_vehicles,
+                'total_rows_input': total_rows_input,
                 'brands_count': len(processed_data),
-                'unique_models': len(valid_unique_models),
+                'unique_models': len(unique_models),
                 'total_vins_processed': total_vins_processed
             }
             print(f"Calculated total_vins_processed: {total_vins_processed}")
-            print(f"Calculated unique_models: {len(valid_unique_models)}")
+            print(f"Calculated unique_models: {len(unique_models)}")
 
             # Return JSON response with filename and summary data
             return jsonify({
